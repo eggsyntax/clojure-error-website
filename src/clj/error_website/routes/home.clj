@@ -6,12 +6,20 @@
 
 (defn home-page []
   (layout/render
-    "home.html" {:docs (-> "docs/docs.md" io/resource slurp)}))
+   "home.html" {:docs (-> "docs/docs.md" io/resource slurp)}))
+
+(defn errors-page []
+  (layout/render "errors.html"))
+
+(defn submit-page []
+  (layout/render "submit.html"))
 
 (defn about-page []
   (layout/render "about.html"))
 
 (defroutes home-routes
   (GET "/" [] (home-page))
-  (GET "/about" [] (about-page)))
-
+  (GET "/errors" [] (errors-page))
+  (GET "/submit" [] (submit-page))
+  (GET "/about" [] (about-page))
+  )
