@@ -1,0 +1,42 @@
+(ns error-website.github-reader
+  (:require [clojure.pprint :refer [pprint]]
+            [clojure.string :as s]
+            [hickory.core :as h]
+            [hickory.select :as hs]))
+
+
+;; Line containing content looks like:
+"            <span class=\"css-truncate css-truncate-target\"><a href=\"/yogthos/clojure-error-message-catalog/blob/master/clj/let-requires-even-number-forms.md\" class=\"js-navigation-open\" id=\"08e44a41930978c7addbd6e6153dffd7-bf4613ba2a9ed6522a518ab7d45baa4ac6d0a309\" title=\"let-requires-even-number-forms.md\">let-requires-even-number-forms.md</a></span>"
+
+(defn- only-md-lines [coll]
+  (filter #(s/includes? % ".md") coll))
+
+(defn- only-body [coll]
+  (->> coll
+       (drop-while #(not (s/includes? % "<tbody>")))
+       (take-while #(not (s/includes? % "</tbody>")))))
+
+(defn get-error-list
+  "Retrieve the list of errors from one of the subdirs of the github repo, as a list
+  of maps, each of which contains the :href and :title keys."
+  [dirname]
+  (->> (str
+        "https://github.com/yogthos/clojure-error-message-catalog/tree/master/"
+        dirname)
+       slurp
+       h/parse
+       h/as-hickory
+       (hs/select
+        (hs/descendant
+         (hs/class "main-content")
+         (hs/class "content")
+         (hs/attr :title)))
+       (map :attrs)))
+
+(defn node-to-link [node]
+  [:a {:href (:href node)} (:title node)])
+
+(defn list-of-node-links [nodes]
+  [:ul
+   (for [node nodes]
+     [:li (node-to-link node)])])
